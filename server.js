@@ -6,9 +6,12 @@ const cors = require( 'cors' );
 const superagent = require( 'superagent' );
 const states = require( 'us-state-converter' );
 const pg = require( 'pg' );
-
-const client = new pg.Client( { connectionString: process.env.DATABASE_URL} );
+let cityArray = [];
 require( 'dotenv' ).config();
+console.log( process.env.DATABASE_URL );
+const client = new pg.Client( { connectionString: process.env.DATABASE_URL} );
+
+
 const PORT = process.env.PORT || 5000;
 server.use( cors() );
 server.get( '/location',locationHandler );
@@ -19,7 +22,9 @@ server.get( '/parks', parkHandler );
 
 
 function locationHandler( req,res ){
-  // checkDataBase( req,res );
+  // if( checkDataBase( req,res )){res.send( checkDataBase( req,res )[0] );}
+  checkDataBase( req,res ) ;
+
   let locationObjects;
   let cityName = req.query.city;
   let key = process.env.LOCATION_KEY;
@@ -38,7 +43,7 @@ function locationHandler( req,res ){
 
       } );
 
-      res.send( locationObjects );
+
 
     } );
 
@@ -111,15 +116,16 @@ function parkHandler( req,res ){
 
 }
 function checkDataBase( req,res ){
-  let cityName = req.query.search_query;
-  let SQL = 'SELECT * FROM locations;';
+  let cityName = req.query.city;
+  console.log( cityName );
+  let SQL = `SELECT * FROM locations WHERE search_query = '${cityName}' ;`;
   client.query( SQL )
     .then( result =>{
-      console.log( result );
-      // if ( result.row ){ res.send( result.row );}
 
-    } ).catch( error=>{
-      res.send( error );
+      cityArray = result.rows.filter( a=> {
+        if ( a.search_query === cityName ){ return 1;}
+      } );
+      return cityArray;
     } );
 
 
