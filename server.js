@@ -5,8 +5,11 @@ const server = express();
 const cors = require( 'cors' );
 const superagent = require( 'superagent' );
 const states = require( 'us-state-converter' );
-const PORT = process.env.PORT || 5000;
+const pg = require( 'pg' );
+
+const client = new pg.Client( { connectionString: process.env.DATABASE_URL} );
 require( 'dotenv' ).config();
+const PORT = process.env.PORT || 5000;
 server.use( cors() );
 server.get( '/location',locationHandler );
 server.get( '/weather', weatherHandler );
@@ -16,6 +19,7 @@ server.get( '/parks', parkHandler );
 
 
 function locationHandler( req,res ){
+  // checkDataBase( req,res );
   let locationObjects;
   let cityName = req.query.city;
   let key = process.env.LOCATION_KEY;
@@ -26,6 +30,13 @@ function locationHandler( req,res ){
     .then( locationData => {
       // console.error( locationData );
       locationObjects = new Geolocation( cityName,locationData.body[0] );
+
+      let SQL = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4) RETURNING *;';
+      let safeValues = [locationObjects.search_query,locationObjects.formatted_query,locationObjects.latitude,locationObjects.longitude];
+      client.query( SQL ,safeValues ).then( result=>{
+        res.send( result.rows );
+
+      } );
 
       res.send( locationObjects );
 
@@ -99,6 +110,21 @@ function parkHandler( req,res ){
 
 
 }
+function checkDataBase( req,res ){
+  let cityName = req.query.search_query;
+  let SQL = 'SELECT * FROM locations;';
+  client.query( SQL )
+    .then( result =>{
+      console.log( result );
+      // if ( result.row ){ res.send( result.row );}
+
+    } ).catch( error=>{
+      res.send( error );
+    } );
+
+
+
+}
 
 
 function Weather( retrievedData ){
@@ -155,8 +181,10 @@ server.get( '*',( req,res ) =>{
 
 
 
+client.connect()
+  .then( () => {
+    server.listen( PORT ,() => {
 
-server.listen( PORT ,() => {
-
-  console.log( `I am listing on PORT ${PORT}` );
-} );
+      console.log( `I am listing on PORT ${PORT}` );
+    } );
+  } );
