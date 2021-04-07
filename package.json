@@ -24,6 +24,8 @@
     "express": "^4.17.1",
     "pg": "^8.5.1",
     "superagent": "^6.1.0",
-    "us-state-converter": "^1.0.5"
+    "us-state-converter": "^1.0.5",
+    "yelp-api": "^1.0.3",
+    "yelp-fusion": "^3.0.0"
   }
 }

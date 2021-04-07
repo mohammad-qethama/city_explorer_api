@@ -4,12 +4,11 @@ const express = require( 'express' );
 const server = express();
 const cors = require( 'cors' );
 const superagent = require( 'superagent' );
-const states = require( 'us-state-converter' );
 const pg = require( 'pg' );
 let cityArray = [];
 require( 'dotenv' ).config();
 // console.log( process.env.DATABASE_URL );
-const client = new pg.Client( { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } } );
+const client = new pg.Client( { connectionString: process.env.DATABASE_URL} );
 
 
 const PORT = process.env.PORT || 5000;
@@ -17,8 +16,10 @@ server.use( cors() );
 server.get( '/location',locationHandler );
 server.get( '/weather', weatherHandler );
 server.get( '/parks', parkHandler );
+server.get( '/movies' ,movieHandler );
+server.get( '/yelp' ,yelpHandler );
 
-
+// /yelp?search_query=texas&formatted_query=Texas%2C%20USA&latitude=31.81603810000000&longitude=-99.51209860000000&page=1
 
 
 function locationHandler( req,res ){
@@ -93,7 +94,7 @@ function weatherHandler ( req,res ) {
 function parkHandler( req,res ){
   let key = process.env.PARK_KEY;
   let cityName = req.query.search_query;
-  console.log( req.query );
+  // console.log( req.query );
   // let cityName = 'seattle';
   let parkHandler = [];
   let filterdList = [];
@@ -128,6 +129,62 @@ function parkHandler( req,res ){
 
 
 }
+
+// Request URL: https://city-explorer-maq.herokuapp.com/movies?search_query=texas&formatted_query=Texas%2C%20USA&latitude=31.81603810000000&longitude=-99.51209860000000&page=1
+
+function movieHandler( req,res ){
+
+  let moviesObjArray = [];
+  let cityName = req.query.search_query;
+
+  let key = process.env.MOVIE_KEY;
+
+  let URLMovies = `https://api.themoviedb.org/3/search/movie?api_key=${key}&query=${cityName}`;
+
+  superagent.get( URLMovies )
+    .then( data =>{
+
+      let dataFiltered = data.body.results;
+      // console.log( dataFiltered );
+      moviesObjArray = dataFiltered.map( element =>{
+        return new Movie( element );
+      } );
+      res.send( moviesObjArray );
+
+    } );
+
+}
+
+function yelpHandler( req,res ) {
+  let cityName = req.query.search_query;
+  let page = req.query.page;
+  const dataPerPage = 5;
+  const start = ( ( page - 1 ) * dataPerPage + 1 ) ;
+  const apiKey = process.env.YELP_KEY;
+
+  let url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${cityName}&limit=${dataPerPage}&offset=${start}`;
+  // const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=47.6062&longitude=122.3321`;
+
+  // superagent.get( url ).set( 'Authorization',`Bearer ${apiKey}` )
+  superagent.get( url ).set( 'Authorization', `Bearer ${apiKey}` )
+    .then( dataYelp =>{
+      let businessesObject = dataYelp.body.businesses.map( element =>{
+        return new Yelp( element );
+      } );
+      res.send( businessesObject );
+
+    } ).catch( error=>{
+      console.error( error );}
+    );
+
+
+
+
+
+
+}
+
+
 
 
 function Weather( retrievedData ){
@@ -166,6 +223,23 @@ function Park( parkData ){
 
 }
 
+function Movie( data ){
+  this.title = data.original_title ;
+  this.overview = data.overview;
+  this.average_votes = data.vote_average;
+  this.total_votes = data.vote_count;
+  this.popularity = data.popularity;
+  this.released_on = data.release_date;
+
+}
+
+function Yelp( data ){
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.price;
+  this.rating = data.rating;
+  this.url = data.url;
+}
 
 server.get( '/',( req,res )=>{
   res.send( 'you server is working' );
