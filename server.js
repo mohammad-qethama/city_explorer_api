@@ -5,8 +5,14 @@ const server = express();
 const cors = require( 'cors' );
 const superagent = require( 'superagent' );
 const states = require( 'us-state-converter' );
-const PORT = process.env.PORT || 5000;
+const pg = require( 'pg' );
+let cityArray = [];
 require( 'dotenv' ).config();
+// console.log( process.env.DATABASE_URL );
+const client = new pg.Client( { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } } );
+
+
+const PORT = process.env.PORT || 5000;
 server.use( cors() );
 server.get( '/location',locationHandler );
 server.get( '/weather', weatherHandler );
@@ -16,22 +22,45 @@ server.get( '/parks', parkHandler );
 
 
 function locationHandler( req,res ){
-  let locationObjects;
+  // if( checkDataBase( req,res )){res.send( checkDataBase( req,res )[0] );}
   let cityName = req.query.city;
-  let key = process.env.LOCATION_KEY;
-  let url = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`;
-  // console.log( url );
+  let SQL = `SELECT * FROM locations WHERE search_query = '${cityName}' ;`;
+  client.query( SQL )
+    .then( dataBaseArray =>{
+      cityArray = dataBaseArray.rows.filter( a=> {
+        if ( a.search_query === cityName ){ return 1;}
+      } );
 
-  superagent.get( url )
-    .then( locationData => {
-      // console.error( locationData );
-      locationObjects = new Geolocation( cityName,locationData.body[0] );
+      if ( cityArray.length ){
+        res.send( cityArray[0] );}else{
 
-      res.send( locationObjects );
 
+        let locationObjects;
+
+        let key = process.env.LOCATION_KEY;
+        let url = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`;
+        // console.log( url );
+
+        superagent.get( url )
+          .then( locationData => {
+          // console.error( locationData );
+            locationObjects = new Geolocation( cityName,locationData.body[0] );
+
+            let SQL = 'INSERT INTO locations (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4) RETURNING *;';
+            let safeValues = [locationObjects.search_query,locationObjects.formatted_query,locationObjects.latitude,locationObjects.longitude];
+            client.query( SQL ,safeValues ).then( result=>{
+              res.send( result.rows[0] );
+
+            } );
+
+
+
+          } );
+      }
     } );
 
 }
+
 
 // let weatherData = require( './data/weather.json' );
 
@@ -155,8 +184,10 @@ server.get( '*',( req,res ) =>{
 
 
 
+client.connect()
+  .then( () => {
+    server.listen( PORT ,() => {
 
-server.listen( PORT ,() => {
-
-  console.log( `I am listing on PORT ${PORT}` );
-} );
+      console.log( `I am listing on PORT ${PORT}` );
+    } );
+  } );
