@@ -22,15 +22,14 @@ this app will be on/as a server to the `https://codefellows.github.io/code-301-g
 ## Architecture
 <!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
 * this project used (JavaScript, Node.js , .express.js , dotenv, cors, nodemon,superagent ,postgreSQL).
-* API Services used  are (LocationIQ , NPS , weatherbit API).
-
+* API Services used  are (LocationIQ , NPS , weatherbit API,YELP FUSION,The MovieDB API ).
 
 ## Change Log
 
 04-04-2021 4:00PM - Application now has a fully-functional express server, with a GET route for the location resource.
-05-04-2021 8:04PM - Applecation now uses  API servers instead of local storage, and now show US national parks
-07-04-2021 11:55PM - Applecation now uses postgreSQL to save locations information into a database and retrive the information from it if he find it there. 
-
+05-04-2021 8:04PM - Application now uses  API servers instead of local storage, and now show US national parks
+07-04-2021 11:55PM - Applications now uses postgreSQL to save locations information into a database and retrive the information from it if he find it there.
+07-04-2021 11:55PM -  Application now uses YELP FUSION API and The MovieDB API  
 
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
 
@@ -41,38 +40,38 @@ this app will be on/as a server to the `https://codefellows.github.io/code-301-g
 
 ****
 
-Number and name of feature: #1 Database: 
+Number and name of feature: #1 Movies:
 
 Estimate of time needed to complete: 15mins
 
-Start time: 4:30 pm
+Start time: 2:00 pm
 
-Finish time: 4:40 pm
-
-Actual time needed to complete: 10 mins
-
-****
-
-Number and name of feature: #2 Server
-
-Estimate of time needed to complete:4 hours
-
-Start time: 6-APR-2021/5:00 pm
-
-Finish time: 7-APR-2021/12 pm
-
-Actual time needed to complete: 9 Hours
-
-****
-
-Number and name of feature: #3 Deploy:
-
-Estimate of time needed to complete: 30 mins
-
-Start time: 7-APR-2021/12:00 pm
-
-Finish time: 7-APR-2021/12:30 pm
+Finish time: 2:30 pm
 
 Actual time needed to complete: 30 mins
+
+****
+
+Number and name of feature: #2 Yelp
+
+Estimate of time needed to complete:2 hours
+
+Start time: 2:30 pm
+
+Finish time: 5:30 pm
+
+Actual time needed to complete: 3 Hours
+
+****
+
+Number and name of feature: #3  Pagination
+
+Estimate of time needed to complete: 15 mins
+
+Start time: 5:30 pm
+
+Finish time: 5:50 pm
+
+Actual time needed to complete: 20 mins
 
 ****
